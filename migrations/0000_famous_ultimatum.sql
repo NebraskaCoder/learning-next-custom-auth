@@ -19,8 +19,9 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" text DEFAULT now(),
 	"updated_at" text DEFAULT now(),
+	"session_id" text NOT NULL,
 	"user_id" uuid NOT NULL,
-	"expires_at" integer NOT NULL,
+	"expires_at" timestamp NOT NULL,
 	"pass_key_used" boolean DEFAULT false NOT NULL,
 	"two_factor_verified" boolean DEFAULT false NOT NULL,
 	"user_agent" text,
@@ -28,7 +29,8 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 	"initial_ip_address_reverse_lookup" text,
 	"source" "session_source" NOT NULL,
 	"known_location" text,
-	"admin_comments" text
+	"admin_comments" text,
+	CONSTRAINT "sessions_session_id_unique" UNIQUE("session_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_emails" (
@@ -74,3 +76,8 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "session_id_user_id_expires_at_index" ON "sessions" USING btree ("session_id","user_id","expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "session_id_index" ON "sessions" USING btree ("session_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_id_index" ON "sessions" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "expires_at_index" ON "sessions" USING btree ("expires_at");
